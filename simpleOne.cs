@@ -1028,7 +1028,7 @@ namespace simpleOne
         private void btnErode_Click(object sender, EventArgs e)
         {
             // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
@@ -1036,6 +1036,7 @@ namespace simpleOne
             AForge.Imaging.Filters.Erosion filter = new AForge.Imaging.Filters.Erosion();
             // apply filter
             System.Drawing.Bitmap newImage = filter.Apply(image);
+            theBitmapRight = newImage;
             picRight.Image = newImage;
             picRight.Refresh();
         }
@@ -1055,7 +1056,7 @@ namespace simpleOne
              * */
 
             // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
@@ -1063,6 +1064,7 @@ namespace simpleOne
             AForge.Imaging.Filters.Dilatation filter = new AForge.Imaging.Filters.Dilatation();
             // apply filter
             System.Drawing.Bitmap newImage = filter.Apply(image);
+            theBitmapRight = newImage;
             picRight.Image = newImage;
             picRight.Refresh();
         }
@@ -1071,7 +1073,7 @@ namespace simpleOne
         {
             // Erode + Dilate
             // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
@@ -1088,7 +1090,7 @@ namespace simpleOne
         {
             // Dilate + Erode
             // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = theBitmapLeft;  // (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
@@ -1103,7 +1105,7 @@ namespace simpleOne
         private void btnThick_Click(object sender, EventArgs e)
         {
             // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
