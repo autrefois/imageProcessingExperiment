@@ -21,14 +21,20 @@ namespace simpleOne
 {
     public partial class simpleOne : Form
     {
+        // Lab 1
         private Image theImage;
         private string file;
         
         private Bitmap theBitmapLeft;
         private Bitmap theBitmapRight;
 
+        // Lab 3
         private Image redhot;
         private Bitmap bRedHot;
+
+        // Lab 5
+        double X, Y, Z, L, a, b, u, v;
+
         public simpleOne()
         {
             InitializeComponent();
@@ -365,7 +371,7 @@ namespace simpleOne
             int w = theBitmapRight.Width;
             int h = theBitmapRight.Height;
 
-            redhot = Image.FromFile("E:\\Facultate\\Anul IV\\Sem II\\Image Processing\\Sample Pics\\red_hot.jpg");
+            redhot = Image.FromFile("E:\\Facultate\\Anul IV\\Sem II\\Image Processing\\PicsToUse\\red_hot.jpg");
             bRedHot = new Bitmap(redhot);
 
             for (int i = 0; i < w; i++)
@@ -531,7 +537,7 @@ namespace simpleOne
 
         /** Lab 4 */
 
-        // Contour detection - Sobel Edge detector
+        // Contour detection - Sobel Edge Detector
 
         public Bitmap FilterProcessImage(Bitmap image)
         {
@@ -618,7 +624,8 @@ namespace simpleOne
 
         // Skeletonization
         // Using the AForge framework
-        private void btnCSSskeleton_Click(object sender, EventArgs e)
+
+        private void AFSkeleton()
         {
             // load the image
             System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
@@ -659,15 +666,137 @@ namespace simpleOne
                 new AForge.Imaging.Filters.FilterIterator(filterSequence, 10);
             // apply the filter
             System.Drawing.Bitmap newImage = filter.Apply(image);
-
             picRight.Image = newImage;
         }
 
+        // Skeletonization - from scratch
+        private void mySkeleton()
+        {
+            theBitmapRight = new Bitmap(theBitmapLeft);
+            btnSave.Enabled = true;
 
-        // Thinning
-        private void btnCSSthinning_Click(object sender, EventArgs e)
+            int w = theBitmapLeft.Width;
+            int h = theBitmapLeft.Height;
+
+            int[][] a = new int[w][];
+            for (int x = 0; x < a.Length; x++)
+            {
+                a[x] = new int[h];
+            }
+
+            int[][] aux = new int[w][];
+            for (int x = 0; x < a.Length; x++)
+            {
+                aux[x] = new int[h];
+            }
+
+            int[][] s = new int[w][];
+            for (int x = 0; x < a.Length; x++)
+            {
+                s[x] = new int[h];
+            }
+
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    Color c = theBitmapRight.GetPixel(i, j);
+
+                    int r = c.R;
+                    int g = c.G;
+                    int b = c.B;
+
+                    int gray = (r + g + b) / 3;
+
+                    if (gray >= 225)
+                    {
+                        a[i][j] = 0;
+                    }
+                    else
+                    {
+                        a[i][j] = 1;
+                    }
+                }
+            }
+
+            int k = 1;
+            int st = 1;
+
+            while (st == 1)
+            {
+                for (int i = 1; i < w - 1; i++)
+                {
+                    for (int j = 1; j < h - 1; j++)
+                    {
+                        aux[i][j] = a[i][j];
+                    }
+                }
+
+                for (int i = 1; i < w - 1; i++)
+                {
+                    for (int j = 1; j < h - 1; j++)
+                    {
+                        if (k == aux[i][j])
+                        {
+                            a[i][j] = Math.Min(
+                                    Math.Min(aux[i + 1][j], aux[i - 1][j]),
+                                    Math.Min(aux[i][j + 1], aux[i][j - 1]))
+                                    + 1;
+                        }
+                    }
+                }
+
+                int rp = 0;
+                for (int i = 1; i < w - 1; i++)
+                {
+                    for (int j = 1; j < h - 1; j++)
+                    {
+                        if (aux[i][j] != a[i][j])
+                        {
+                            rp = 1;
+                        }
+                    }
+                }
+
+                if (rp == 0) st = 0;
+                k++;
+            }
+
+            for (int i = 1; i < w - 1; i++)
+            {
+                for (int j = 1; j < h - 1; j++)
+                {
+                    if (a[i][j] >= a[i + 1][j] && a[i][j] >= a[i - 1][j]
+                        && a[i][j] >= a[i][j - 1] && a[i][j] >= a[i][j + 1])
+                    {
+                        s[i][j] = 1;
+                        theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 0, 0, 0));
+                    }
+                    else
+                    {
+                        s[i][j] = 0;
+                        theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                    }
+                }
+            }
+
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+
+        private void btnCSSskeleton_Click(object sender, EventArgs e)
         {
 
+            // AFSkeleton();
+            mySkeleton();
+        }
+
+
+
+        // Thinning
+
+        private void AFThin()
+        {
             // load the image
             System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
             // format image
@@ -686,6 +815,124 @@ namespace simpleOne
 
             picRight.Image = image;
             picRight.Refresh();
+        }
+
+        private void myThin()
+        {
+            theBitmapRight = new Bitmap(theBitmapLeft);
+            btnSave.Enabled = true;
+
+            int[] x_uri = new int[] { -1, -1, -1, 0, 1, 1, 1, 0 };
+            int[] y_uri = new int[] { 1, 0, -1, -1, -1, 0, 1, 1 };
+
+            int w = theBitmapLeft.Width;
+            int h = theBitmapLeft.Height;
+
+            for (int i = 0; i < w; i++)
+            {
+                for (int j = 0; j < h; j++)
+                {
+                    int s = 0;
+                    Color c = theBitmapRight.GetPixel(i, j);
+
+                    int gray = c.R;
+
+                    if (gray == 255)
+                    {
+                        for (int k = 0; k < 8; k++)
+                        {
+                            if (i + x_uri[k] >= 0 && i + x_uri[k] < w
+                                && j + y_uri[k] >= 0
+                                && j + y_uri[k] < h)
+                            {
+                                c = theBitmapLeft.GetPixel(i + x_uri[k], j + y_uri[k]);
+                                gray = (c.R);
+                                if (gray == 255)
+                                {
+                                    s++;
+                                }
+                            }
+                        }
+                    }
+
+                    if (s == 1)
+                    {
+                        c = theBitmapLeft.GetPixel(i, j - 1);
+                        int westGray = c.R;
+                        c = theBitmapLeft.GetPixel(i, j + 1);
+                        int eastGray = c.R;
+                        c = theBitmapLeft.GetPixel(i - 1, j);
+                        int northGray = c.R;
+                        c = theBitmapLeft.GetPixel(i + 1, j);
+                        int southGray = c.R;
+
+                        if (westGray == 255 || eastGray == 255 || northGray == 255 || southGray == 255)
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+
+                    }
+
+                    if (s == 2)
+                    {
+                        c = theBitmapLeft.GetPixel(i, j - 1);
+                        int westGray = c.R;
+                        c = theBitmapLeft.GetPixel(i, j + 1);
+                        int eastGray = c.R;
+                        c = theBitmapLeft.GetPixel(i - 1, j);
+                        int northGray = c.R;
+                        c = theBitmapLeft.GetPixel(i + 1, j);
+                        int southGray = c.R;
+
+                        c = theBitmapLeft.GetPixel(i + 1, j - 1);
+                        int southWestGray = c.R;
+                        c = theBitmapLeft.GetPixel(i + 1, j + 1);
+                        int southEastGray = c.R;
+                        c = theBitmapLeft.GetPixel(i - 1, j - 1);
+                        int northWestGray = c.R;
+                        c = theBitmapLeft.GetPixel(i - 1, j + 1);
+                        int northEastGray = c.R;
+
+                        if (northEastGray == 255 && northWestGray == 255)
+                        {
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i - 1, j, Color.FromArgb(255, 0, 0, 0));
+                        }
+
+                        if (northWestGray == 255 && southWestGray == 255)
+                        {
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i, j - 1, Color.FromArgb(255, 0, 0, 0));
+                        }
+
+                        if (southWestGray == 255 && southEastGray == 255)
+                        {
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i + 1, j, Color.FromArgb(255, 0, 0, 0));
+                        }
+
+                        if (southEastGray == 255 && northEastGray == 255)
+                        {
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i, j + 1, Color.FromArgb(255, 0, 0, 0));
+                        }
+
+                        if (eastGray == 255 && northGray == 255 || 
+                            eastGray == 255 && southGray == 255 || 
+                            northGray == 255 && westGray == 255 ||
+                            westGray == 255 && southGray == 255)
+                        {
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                        }
+                    }
+                }
+            }
+
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+        private void btnCSSthinning_Click(object sender, EventArgs e)
+        {
+            // AFThin();
+            myThin();
         }
 
         private void groupBox1_Enter(object sender, EventArgs e)
@@ -735,6 +982,25 @@ namespace simpleOne
             {
                 MessageBox.Show(ex.ToString());
             }
+        }
+
+        private void btnBW_Click(object sender, EventArgs e)
+        {
+            // load the image
+            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            // format image
+            // AForge.Imaging.Image.FormatImage(ref image);
+            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
+            // create filter
+            Threshold filter = new Threshold(100);
+            // apply the filter
+            filter.Apply(image);
+
+            theBitmapRight = image;
+
+            picRight.Image = image;
+            picRight.Refresh();
+
         }
 
         private void btnErode_Click(object sender, EventArgs e)
@@ -836,32 +1102,264 @@ namespace simpleOne
 
         // Color transformation
 
+        public void ColorToHSV(Color color, out double hue, out double saturation, out double value)
+        {
+            int max = Math.Max(color.R, Math.Max(color.G, color.B));
+            int min = Math.Min(color.R, Math.Min(color.G, color.B));
+
+            hue = color.GetHue();
+            saturation = (max == 0) ? 0 : 1d - (1d * min / max);
+            value = max / 255d;
+        }
+
+        public Color ColorFromHSV(double hue, double saturation, double value)
+        {
+            int hi = Convert.ToInt32(Math.Floor(hue / 60)) % 6;
+            double f = hue / 60 - Math.Floor(hue / 60);
+
+            value = value * 255;
+            int v = Convert.ToInt32(value);
+            int p = Convert.ToInt32(value * (1 - saturation));
+            int q = Convert.ToInt32(value * (1 - f * saturation));
+            int t = Convert.ToInt32(value * (1 - (1 - f) * saturation));
+
+            if (hi == 0)
+                return Color.FromArgb(255, v, t, p);
+            else if (hi == 1)
+                return Color.FromArgb(255, q, v, p);
+            else if (hi == 2)
+                return Color.FromArgb(255, p, v, t);
+            else if (hi == 3)
+                return Color.FromArgb(255, p, q, v);
+            else if (hi == 4)
+                return Color.FromArgb(255, t, p, v);
+            else
+                return Color.FromArgb(255, v, p, q);
+        }
+
+        /** From Lecture 9, slide 12 */
+        private void RGBtoXYZ(Color c/*, double X, double Y, double Z*/)
+        {
+            double r = c.R ;/// 255;
+            double g = c.G ;/// 255;
+            double b = c.B ;/// 255;
+
+            Console.WriteLine("R = " + r + "; G = " + g + "; B = " + b);
+
+            if ( r > 0.04045 ) r = Math.Pow((( r + 0.055 ) / 1.055 ), 2.4);
+                    else r = r / 12.92;
+            if ( g > 0.04045 ) g =  Math.Pow(( ( g + 0.055 ) / 1.055 ), 2.4);
+                    else  g = g / 12.92;
+            if ( b > 0.04045 ) b = Math.Pow(( ( b + 0.055 ) / 1.055 ) , 2.4);
+                    else b = b / 12.92;
+
+            r = r * 100;
+            g = g * 100;
+            b = b * 100;
+
+
+            // Observer. = 2°, Illuminant = D65
+            X = r * 0.4124 + g * 0.3576 + b * 0.1805;
+            Y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+            Z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+        }
+
+        private Color XYZtoRGB()
+        {
+            // Observer = 2°, Illuminant = D65)
+            double var_X = X / 100;        
+            double var_Y = Y / 100;       
+            double var_Z = Z / 100;
+
+            Console.WriteLine("X = " + var_X + "; Y = " + var_Y + "; Z = " + var_Z);
+
+            int var_R = (int) (var_X *  3.2406 + var_Y * -1.5372 + var_Z * -0.4986);
+            int var_G = (int) (var_X * -0.9689 + var_Y *  1.8758 + var_Z *  0.0415);
+            int var_B = (int) (var_X *  0.0557 + var_Y * -0.2040 + var_Z *  1.0570);
+
+            if ( var_R > 0.0031308 ) 
+                var_R = (int) (1.055 * ( Math.Pow(var_R, ( 1 / 2.4 )) ) - 0.055);
+              else var_R = (int) (12.92 * var_R);
+            if ( var_G > 0.0031308 ) 
+                var_G = (int) (1.055 * ( Math.Pow(var_G, ( 1 / 2.4 ))) - 0.055);
+              else var_G = (int) (12.92 * var_G);
+            if ( var_B > 0.0031308 ) 
+                var_B = (int) (1.055 * ( Math.Pow(var_B, ( 1 / 2.4 ))) - 0.055);
+              else var_B = (int) (12.92 * var_B);
+
+            Color c = Color.FromArgb(var_R , var_G , var_B );
+
+            return c;
+
+        }
+
+        private void XYZtoLAB(/*double X, double Y, double Z, double L, double a, double b*/)
+        {
+            double ref_X =  95.047;
+            double ref_Y = 100.000;
+            double ref_Z = 108.883;
+
+            // Observer= 2°, Illuminant= D65
+            double var_X = X / ref_X;         
+            double var_Y = Y / ref_Y;          
+            double var_Z = Z / ref_Z;          
+
+            if ( var_X > 0.008856 ) var_X = Math.Pow(var_X, 1/3);
+                else var_X = ( 7.787 * var_X ) + (16 / 116);
+            if ( var_Y > 0.008856 ) var_Y = Math.Pow(var_Y, 1/3);
+                else var_Y = ( 7.787 * var_Y ) + (16 / 116);
+            if (var_Z > 0.008856) var_Z = Math.Pow(var_Z, 1 / 3);
+                else var_Z = (7.787 * var_Z) + (16 / 116);
+
+            L = ( 116 * var_Y ) - 16;
+            a = 500 * ( var_X - var_Y );
+            b = 200 * ( var_Y - var_Z );
+        }
+
+        private void XYZtoLUV(/*double X, double Y, double Z, double L, double u, double v*/)
+        {
+            double var_U = ( 4 * X ) / ( X + ( 15 * Y ) + ( 3 * Z ) );
+            double var_V = ( 9 * Y ) / ( X + ( 15 * Y ) + ( 3 * Z ) );
+
+            double var_Y = Y / 100;
+
+            if (var_Y > 0.008856) var_Y = Math.Pow(var_Y, 1 / 3);
+                else var_Y = (7.787 * var_Y) + (16 / 116);
+
+            // Observer= 2°, Illuminant= D65
+            double ref_X =  95.047;     
+            double ref_Y = 100.000;
+            double ref_Z = 108.883;
+
+            double ref_U = ( 4 * ref_X ) / ( ref_X + ( 15 * ref_Y ) + ( 3 * ref_Z ) );
+            double ref_V = ( 9 * ref_Y ) / ( ref_X + ( 15 * ref_Y ) + ( 3 * ref_Z ) );
+
+            L = ( 116 * var_Y ) - 16;
+            u = 13 * L * ( var_U - ref_U );
+            v = 13 * L * ( var_V - ref_V );
+        }
+
+        private void LUVtoXYZ()
+        {
+            double var_Y = ( L + 16 ) / 116;
+            if (Math.Pow(var_Y, 3) > 0.008856)
+                var_Y = Math.Pow(var_Y, 3);
+            else var_Y = (var_Y - 16 / 116) / 7.787;
+
+            // Observer= 2°, Illuminant= D65
+            double ref_X =  95.047 ;     
+            double ref_Y = 100.000;
+            double ref_Z = 108.883;
+
+            double ref_U = (4 * ref_X) / (ref_X + (15 * ref_Y) + (3 * ref_Z));
+            double ref_V = (9 * ref_Y) / (ref_X + (15 * ref_Y) + (3 * ref_Z));
+
+            double var_U = u / (13 * L) + ref_U;
+            double var_V = u / (13 * L) + ref_V;
+
+            Y = var_Y * 100;
+            X = -(9 * Y * var_U) / ((var_U - 4) * var_V - var_U * var_V);
+            Z = (9 * Y - (15 * var_V * Y) - (var_V * X)) / (3 * var_V);
+        }
+
         private void btnColorTransf_Click(object sender, EventArgs e)
+        {
+            // RGB to XYZ
+
+            try
+            {
+               
+                if ((txtR.Text.Equals("")) && (txtG.Text.Equals("")) && (txtB.Text.Equals("")))
+                {
+                    theBitmapRight = new Bitmap(theBitmapLeft);
+                    btnSave.Enabled = true;
+
+                    //   for (int i = 0; i < theBitmapLeft.Height; i++)
+                    //       for (int j = 0; j < theBitmapLeft.Width; j++)
+                    int i = 0;
+                    int j = 0;
+                    {
+                        Color c = theBitmapLeft.GetPixel(j, i);
+                        RGBtoXYZ(c);
+                       // Console.WriteLine("X = " + X + "; Y = " + Y + "; Z = " + Z);
+                        
+                        //       XYZtoLAB();
+                        //       Console.WriteLine("L = " + L + "; a = " + a + "; b = " + b);
+
+                    }
+                }
+
+                else
+                {
+                    int R = int.Parse(txtR.Text);
+                    int G = int.Parse(txtG.Text);
+                    int B = int.Parse(txtB.Text);
+
+                    Color c = Color.FromArgb(R,G,B);
+
+                    RGBtoXYZ(c);
+                }
+
+                Console.WriteLine("X = " + X + "; Y = " + Y + "; Z = " + Z);
+                txtX.Text = X.ToString();
+                txtY.Text = Y.ToString();
+                txtZ.Text = Z.ToString();
+                
+              //  picRight.Image = theBitmapRight;
+              //  picRight.Refresh();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.ToString());
+            }
+            
+        }
+
+        private void textBox6_TextChanged(object sender, EventArgs e)
         {
 
         }
 
-        private void btnBW_Click(object sender, EventArgs e)
+        private void btnXYZtoRGB_Click(object sender, EventArgs e)
         {
-            // load the image
-            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
-            // format image
-            // AForge.Imaging.Image.FormatImage(ref image);
-            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
-            // create filter
-            short[,] se = new short[,] {
-                    { -1, -1, -1 },
-                    {  1,  1,  0 },
-                    { -1, -1, -1 }
-                };
-            // create filter
-            Threshold filter = new Threshold(100);
-            // apply the filter
-            filter.ApplyInPlace(image);
+            X = Double.Parse(txtX.Text);
+            Y = Double.Parse(txtY.Text);
+            Z = Double.Parse(txtZ.Text);
 
-            picRight.Image = image;
-            picRight.Refresh();
+            Color c = XYZtoRGB();
+
+            txtR.Text = c.R.ToString();
+            txtG.Text = c.G.ToString();
+            txtB.Text = c.B.ToString();
+        }
+
+        private void btnXYZtoLuv_Click(object sender, EventArgs e)
+        {
+            X = Double.Parse(txtX.Text);
+            Y = Double.Parse(txtY.Text);
+            Z = Double.Parse(txtZ.Text);
             
+            XYZtoLUV();
+            Console.WriteLine("L = " + L + "; u = " + u + "; v = " + v);
+
+            txtL.Text = L.ToString();
+            txtU.Text = u.ToString();
+            txtV.Text = v.ToString();
+        }
+
+        private void btnLuvtoXYZ_Click(object sender, EventArgs e)
+        {
+            int L = int.Parse(txtL.Text);
+            int u = int.Parse(txtU.Text);
+            int v = int.Parse(txtV.Text);
+
+
+            LUVtoXYZ();
+
+            Console.WriteLine("X = " + X + "; Y = " + Y + "; Z = " + Z);
+            txtX.Text = X.ToString();
+            txtY.Text = Y.ToString();
+            txtZ.Text = Z.ToString();
         }
 
     }
