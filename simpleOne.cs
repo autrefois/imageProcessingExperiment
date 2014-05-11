@@ -39,10 +39,11 @@ namespace simpleOne
         public simpleOne()
         {
             InitializeComponent();
-            btnSave.Enabled = false;
+       /*     btnSave.Enabled = false;
             btnProcess.Enabled = false;
             btnInverse.Enabled = false;
             btnExtract.Enabled = false;
+        * */
 
             structuralElement = new Color[2][];
             for (int x = 0; x < structuralElement.Length; x++)
@@ -1016,6 +1017,13 @@ namespace simpleOne
             picRight.Refresh();
 
         }
+
+        /** Duality of morphological transformations can be proved by
+         * erosion and dilation.
+         * i.e. Erosion and dilation are duals of each other with respect to set complementation and reflection.
+         * 
+         * */
+
 
         private void btnErode_Click(object sender, EventArgs e)
         {
