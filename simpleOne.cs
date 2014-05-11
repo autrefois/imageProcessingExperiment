@@ -34,6 +34,7 @@ namespace simpleOne
 
         // Lab 5
         double X, Y, Z, L, a, b, u, v;
+        Color[][] structuralElement;
 
         public simpleOne()
         {
@@ -42,6 +43,18 @@ namespace simpleOne
             btnProcess.Enabled = false;
             btnInverse.Enabled = false;
             btnExtract.Enabled = false;
+
+            structuralElement = new Color[2][];
+            for (int x = 0; x < structuralElement.Length; x++)
+            {
+                structuralElement[x] = new Color[2];
+            }
+
+            structuralElement[0][0] = Color.FromArgb(10, 10, 10);
+            structuralElement[0][1] = Color.FromArgb(10, 10, 10);
+            structuralElement[1][0] = Color.FromArgb(10, 10, 10);
+            structuralElement[1][1] = Color.FromArgb(10, 10, 10);
+            
         }
 
         private void pictureBox2_Click(object sender, EventArgs e)
@@ -51,7 +64,7 @@ namespace simpleOne
 
         private void Form1_Load(object sender, EventArgs e)
         {
-
+                
         }
 
         /** Lab 1 - Simple Processing */
@@ -828,9 +841,9 @@ namespace simpleOne
             int w = theBitmapLeft.Width;
             int h = theBitmapLeft.Height;
 
-            for (int i = 0; i < w; i++)
+            for (int i = 1; i < w - 1; i++)
             {
-                for (int j = 0; j < h; j++)
+                for (int j = 1; j < h - 1; j++)
                 {
                     int s = 0;
                     Color c = theBitmapRight.GetPixel(i, j);
@@ -841,7 +854,8 @@ namespace simpleOne
                     {
                         for (int k = 0; k < 8; k++)
                         {
-                            if (i + x_uri[k] >= 0 && i + x_uri[k] < w
+                            if (i + x_uri[k] >= 0 
+                                && i + x_uri[k] < w
                                 && j + y_uri[k] >= 0
                                 && j + y_uri[k] < h)
                             {
@@ -867,7 +881,7 @@ namespace simpleOne
                         int southGray = c.R;
 
                         if (westGray == 255 || eastGray == 255 || northGray == 255 || southGray == 255)
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
 
                     }
 
@@ -893,26 +907,26 @@ namespace simpleOne
 
                         if (northEastGray == 255 && northWestGray == 255)
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                            theBitmapRight.SetPixel(i - 1, j, Color.FromArgb(255, 0, 0, 0));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
+                            theBitmapRight.SetPixel(i - 1, j, Color.FromArgb(0, 0, 0));
                         }
 
                         if (northWestGray == 255 && southWestGray == 255)
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                            theBitmapRight.SetPixel(i, j - 1, Color.FromArgb(255, 0, 0, 0));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
+                            theBitmapRight.SetPixel(i, j - 1, Color.FromArgb(0, 0, 0));
                         }
 
                         if (southWestGray == 255 && southEastGray == 255)
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                            theBitmapRight.SetPixel(i + 1, j, Color.FromArgb(255, 0, 0, 0));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
+                            theBitmapRight.SetPixel(i + 1, j, Color.FromArgb(0, 0, 0));
                         }
 
                         if (southEastGray == 255 && northEastGray == 255)
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
-                            theBitmapRight.SetPixel(i, j + 1, Color.FromArgb(255, 0, 0, 0));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
+                            theBitmapRight.SetPixel(i, j + 1, Color.FromArgb(0, 0, 0));
                         }
 
                         if (eastGray == 255 && northGray == 255 || 
@@ -920,7 +934,7 @@ namespace simpleOne
                             northGray == 255 && westGray == 255 ||
                             westGray == 255 && southGray == 255)
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255, 255));
+                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
                         }
                     }
                 }
@@ -1360,6 +1374,117 @@ namespace simpleOne
             txtX.Text = X.ToString();
             txtY.Text = Y.ToString();
             txtZ.Text = Z.ToString();
+        }
+
+        private Bitmap dilBitmap(Bitmap inputBitmap)
+        {
+            Bitmap bit = new Bitmap(inputBitmap);
+            int w = inputBitmap.Width;
+            int h = inputBitmap.Height;
+
+            for (int i = 1; i < w - 1; i++)
+            {
+                for (int j = 1; j < h - 1; j++)
+                {
+                    Color c;
+                    int max = 0;
+
+                    for (int ii = 0; ii < structuralElement.Length; ii++)
+                    {
+                        for (int jj = 0; jj < structuralElement.Length; jj++)
+                        {
+                            if (i - ii >= 0 && j - jj >= 0)
+                            {
+                                Color temp = inputBitmap.GetPixel(i - ii, j - jj);
+                                if (max < temp.R + structuralElement[ii][jj].R)
+                                {
+                                    max = temp.R + structuralElement[ii][jj].R;
+                                }
+                            }
+                        }
+                    }
+                    if (max > 255)
+                        max = 255;
+
+                    c = Color.FromArgb(max, max, max);
+
+                    bit.SetPixel(i, j, c);
+                }
+            }
+
+            return bit;
+        }
+
+        private Bitmap eroBitmap(Bitmap inputBitmap)
+        {
+            Bitmap bit = new Bitmap(inputBitmap);
+            int w = inputBitmap.Width;
+            int h = inputBitmap.Height;
+
+            for (int i = 1; i < w - 1; i++)
+            {
+                for (int j = 1; j < h - 1; j++)
+                {
+                    Color c;
+                    int min = int.MaxValue;
+
+                    for (int ii = 0; ii < structuralElement.Length; ii++)
+                    {
+                        for (int jj = 0; jj < structuralElement.Length; jj++)
+                        {
+                            if (i - ii >= 0 && j - jj >= 0)
+                            {
+                                Color temp = inputBitmap.GetPixel(i - ii, j - jj);
+                                if (min > temp.R - structuralElement[ii][jj].R)
+                                {
+                                    min = temp.R - structuralElement[ii][jj].R;
+                                }
+                            }
+                        }
+                    }
+                    if (min < 0)
+                        min = 0;
+
+                    c = Color.FromArgb(min, min, min);
+
+                    bit.SetPixel(i, j, c);
+                }
+            }
+
+            return bit;
+        }
+
+        private Bitmap morphGradient(Bitmap dilBitmap, Bitmap eroBitmap)
+        {
+            Bitmap bit = new Bitmap(theBitmapLeft);
+            btnSave.Enabled = true;
+
+            int w = theBitmapLeft.Width;
+            int h = theBitmapLeft.Height;
+
+            for (int i = 1; i < w - 1; i++)
+            {
+                for (int j = 1; j < h - 1; j++)
+                {
+                    Color d = dilBitmap.GetPixel(i, j);
+                    Color e = eroBitmap.GetPixel(i, j);
+
+                    int v = d.R - e.R;
+                    if (v > 255) v = 255;
+                    if (v < 0) v = 0;
+
+                    bit.SetPixel(i, j, Color.FromArgb(v, v, v));
+                }
+            }
+
+            return bit;
+        }
+
+        private void btnColorGradient_Click(object sender, EventArgs e)
+        {
+            theBitmapRight = morphGradient(dilBitmap(theBitmapLeft), eroBitmap(theBitmapLeft));
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
         }
 
     }
