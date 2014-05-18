@@ -467,76 +467,66 @@ namespace simpleOne
 
         private void btnContours_Click(object sender, EventArgs e)
         {
+            theBitmapRight = contours(theBitmapLeft);
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();   
+        }
 
-            try
+        private Bitmap contours(Bitmap source)
+        {
+            Bitmap newBitmap = new Bitmap(source.Width, source.Height);
+
+            for (int i = 1; i < source.Width - 1; i++)
             {
-                theBitmapRight = new Bitmap(theBitmapLeft);
-                btnSave.Enabled = true;
+                double x = (double)tb_howMuch.Value / 40;
+                for (int j = 1; j < source.Height - 1; j++)
+                {
+                    int vr = contR(i, j, x);
+                    if (vr < 0)
+                        vr = 0;
+                    else if (vr > 255)
+                        vr = 255;
 
-		int w = theBitmapLeft.Width;
-		int h = theBitmapLeft.Height;
+                    int vg = contG(i, j, x);
+                    if (vg < 0)
+                        vg = 0;
+                    else if (vg > 255)
+                        vg = 255;
 
-		for (int i = 0; i < w; i++) {
-			for (int j = 0; j < h; j++) {
-				Color c = theBitmapLeft.GetPixel(i, j);
-				int m;
+                    int vb = contB(i, j, x);
+                    if (vb < 0)
+                        vb = 0;
+                    else if (vb > 255)
+                        vb = 255;
 
-				int mc = (c.R + c.G + c.B) / 3;
-				m = mc;
-				if (mc <= 128 && mc >= 0)
-					m = 0;
-				if (mc > 128 & mc < 255)
-					m = 255;
-                theBitmapRight.SetPixel(i, j, Color.FromArgb(m, m, m));
-			}
-		}
-
-        //int[] x_uri = new int[] { -1, -1, -1, 0, 1, 1, 1, 0 };
-        //int[] y_uri = new int[] { 1, 0, -1, -1, -1, 0, 1, 1 };
-
-
-        //for (int i = 0; i < theBitmapRight.Width; i++)
-        //{
-        //    for (int j = 0; j < theBitmapRight.Height; j++)
-        //    {
-
-        //        int s = 0;
-        //        Color c = theBitmapRight.GetPixel(i, j);
-        //        int r = c.R;
-        //        int g = c.G;
-        //        int b = c.B;
-
-        //        if (r != 0 || g != 0 || b != 0) {
-        //            for (int k = 0; k < 8; k++) {
-        //                if (i + x_uri[k] >= 0
-        //                        && i + x_uri[k] < theBitmapRight.Width
-        //                        && j + y_uri[k] >= 0
-        //                        && j + y_uri[k] < theBitmapRight.Height)
-        //                {
-        //                    c = theBitmapRight.GetPixel(i + x_uri[k], j
-        //                            + y_uri[k]);
-        //                    int gri = c.R;
-        //                    if (gri == 255) {
-        //                        s++;
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        if (s == 0 || s == 1 || s == 7 || s == 8) {
-        //            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-        //        }
-
-        //    }
-        //} 
-
-                picRight.Image = theBitmapRight;
-                picRight.Refresh();
+                    newBitmap.SetPixel(i, j, Color.FromArgb(255, vr, vg, vb));
+                }
             }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.ToString());
-            }
+            return newBitmap;
+        }
+
+        private int contR(int i, int j, double l)
+        {
+            int r = theBitmapLeft.GetPixel(i,j).R;
+            int f = (theBitmapLeft.GetPixel(i, j).R + theBitmapLeft.GetPixel(i, j).G + theBitmapLeft.GetPixel(i, j).B) / 3;
+            int v = r + Convert.ToInt32(l * (r - f));
+            return v;
+        }
+
+        private int contG(int i, int j, double l)
+        {
+            int r = theBitmapLeft.GetPixel(i, j).G;
+            int f = (theBitmapLeft.GetPixel(i, j).R + theBitmapLeft.GetPixel(i, j).G + theBitmapLeft.GetPixel(i, j).B) / 3;
+            int v = r + Convert.ToInt32(l * (r - f));
+            return v;
+        }
+
+        private int contB(int i, int j, double l)
+        {
+            int r = theBitmapLeft.GetPixel(i, j).B;
+            int f = (theBitmapLeft.GetPixel(i, j).R + theBitmapLeft.GetPixel(i, j).G + theBitmapLeft.GetPixel(i, j).B) / 3;
+            int v = r + Convert.ToInt32(l * (r - f));
+            return v;
         }
 
         private void tb_howMuch_Scroll(object sender, EventArgs e)
@@ -547,6 +537,264 @@ namespace simpleOne
         private void label1_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnDirectional_Click(object sender, EventArgs e)
+        {
+            theBitmapRight = DirectionalFilter(theBitmapLeft, Convert.ToInt32(cmbDirectional.SelectedItem));
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+
+        private Bitmap DirectionalFilter(Bitmap source, int n)
+        {
+            Bitmap newBitmap = new Bitmap(source.Width, source.Height);
+
+            for (int x = n / 2; x < source.Width - n / 2; x++)
+            {
+                for (int y = n / 2; y < source.Height - n / 2; y++)
+                {
+                    newBitmap.SetPixel(x, y, Color.FromArgb(DirR(x, y, n), DirG(x, y, n), DirB(x, y, n)));
+                }
+            }
+
+            return newBitmap;
+        }
+
+        int DirR(int r , int c, int n)
+        {
+            int[] valfa = new int[4];
+            int[] optimalDir = new int[4];
+            Color color = theBitmapLeft.GetPixel(0, 2);
+
+            int[,] matrix = new int[n, n];
+
+            for (int i = r - n / 2; i <= r + n / 2; i++)
+            {
+                for (int j = c - n / 2; j <= c + n / 2; j++)
+                {
+                    if (i - j == r - c)
+                        valfa[0] = valfa[0] + theBitmapLeft.GetPixel(i, j).R;
+                    if (i + j == r + c)
+                        valfa[1] = valfa[1] + theBitmapLeft.GetPixel(i, j).R;
+                    if (i == r)
+                        valfa[2] = valfa[2] + theBitmapLeft.GetPixel(i, j).R;
+                    if (j == c)
+                        valfa[3] = valfa[3] + theBitmapLeft.GetPixel(i, j).R;
+                }
+                
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                valfa[i] = valfa[i] / n;
+            }
+
+
+            for (int i = 0; i < 4; i++)
+            {
+                optimalDir[i] = Math.Abs(theBitmapLeft.GetPixel(r, c).R - valfa[i]);
+            }
+
+            int min = optimalDir[0];
+            int indice = 0;
+
+            for (int j = 1; j < 4; j++)
+            {
+                if (min > optimalDir[j])
+                {
+                    min = optimalDir[j];
+                    indice = j;
+                }
+            }
+
+            return valfa[indice];
+        }
+
+        int DirG(int r, int c,int n)
+        {
+            int[] valfa = new int[4];
+            int[] optimalDir = new int[4];
+            Color color = theBitmapLeft.GetPixel(0, 2);
+
+            int[,] matrix = new int[n, n];
+
+            for (int i = r - n / 2; i <= r + n / 2; i++)
+            {
+                for (int j = c - n / 2; j <= c + n / 2; j++)
+                {
+                    if (i - j == r - c)
+                        valfa[0] = valfa[0] + theBitmapLeft.GetPixel(i, j).G;
+                    if (i + j == r + c)
+                        valfa[1] = valfa[1] + theBitmapLeft.GetPixel(i, j).G;
+                    if (i == r)
+                        valfa[2] = valfa[2] + theBitmapLeft.GetPixel(i, j).G;
+                    if (j == c)
+                        valfa[3] = valfa[3] + theBitmapLeft.GetPixel(i, j).G;
+                }
+
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                valfa[i] = valfa[i] / n;
+            }
+
+
+            for (int i = 0; i < 4; i++)
+            {
+                optimalDir[i] = Math.Abs(theBitmapLeft.GetPixel(r, c).G - valfa[i]);
+            }
+
+            int min = optimalDir[0];
+            int indice = 0;
+
+            for (int j = 1; j < 4; j++)
+            {
+                if (min > optimalDir[j])
+                {
+                    min = optimalDir[j];
+                    indice = j;
+                }
+            }
+
+            return valfa[indice];
+        }
+
+        int DirB(int r, int c, int n)
+        {
+            int[] valfa = new int[4];
+            int[] optimalDir = new int[4];
+            Color color = theBitmapLeft.GetPixel(0, 2);
+
+            int[,] matrix = new int[n, n];
+
+            for (int i = r - n / 2; i <= r + n / 2; i++)
+            {
+                for (int j = c - n / 2; j <= c + n / 2; j++)
+                {
+                    if (i - j == r - c)
+                        valfa[0] = valfa[0] + theBitmapLeft.GetPixel(i, j).B;
+                    if (i + j == r + c)
+                        valfa[1] = valfa[1] + theBitmapLeft.GetPixel(i, j).B;
+                    if (i == r)
+                        valfa[2] = valfa[2] + theBitmapLeft.GetPixel(i, j).B;
+                    if (j == c)
+                        valfa[3] = valfa[3] + theBitmapLeft.GetPixel(i, j).B;
+                }
+
+            }
+
+            for (int i = 0; i < 4; i++)
+            {
+                valfa[i] = valfa[i] / n;
+            }
+
+
+            for (int i = 0; i < 4; i++)
+            {
+                optimalDir[i] = Math.Abs(theBitmapLeft.GetPixel(r, c).R - valfa[i]);
+            }
+
+            int min = optimalDir[0];
+            int indice = 0;
+
+            for (int j = 1; j < 4; j++)
+            {
+                if (min > optimalDir[j])
+                {
+                    min = optimalDir[j];
+                    indice = j;
+                }
+            }
+
+            return valfa[indice];
+        }
+
+        // Biomedical images
+        private void btnLaplacian_Click(object sender, EventArgs e)
+        {
+            theBitmapRight = laplacian(theBitmapLeft);
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+
+        private Bitmap laplacian(Bitmap source)
+        {
+            Bitmap newBitmap = new Bitmap(source.Width, source.Height);
+            for (int i = 1; i < source.Width - 1; i++)
+            {
+
+                for (int j = 1; j < source.Height - 1; j++)
+                {
+                    int vr = LapR(i, j);
+                    if (vr < 0)
+                        vr = 0;
+                    else if (vr > 255)
+                        vr = 255;
+
+                    int vg = LapG(i, j);
+                    if (vg < 0)
+                        vg = 0;
+                    else if (vg > 255)
+                        vg = 255;
+
+                    int vb = LapB(i, j);
+                    if (vb < 0)
+                        vb = 0;
+                    else if (vb > 255)
+                        vb = 255;
+
+                    newBitmap.SetPixel(i, j, Color.FromArgb(255, vr, vg, vb));
+                }
+            }
+
+            return newBitmap;
+        }
+
+        /*
+         * -1 -1 -1
+         * -1  9 -1
+         * -1 -1 -1
+         * */
+
+        int LapR(int i, int j)
+        {
+            int s = 0;
+            for (int ii = -1; ii <= 1; ii++)
+                for (int jj = -1; jj <= 1; jj++)
+                    if ((ii == 0) && (jj == 0))
+                        s += 9 * theBitmapLeft.GetPixel(i + ii, j + jj).R;
+                    else
+                        s += (-1) * theBitmapLeft.GetPixel(i + ii, j + jj).R;
+
+            return s;
+        }
+
+        int LapG(int i, int j)
+        {
+            int s = 0;
+            for (int ii = -1; ii <= 1; ii++)
+                for (int jj = -1; jj <= 1; jj++)
+                    if ((ii == 0) && (jj == 0))
+                        s += 9 * theBitmapLeft.GetPixel(i + ii, j + jj).G;
+                    else
+                        s += (-1) * theBitmapLeft.GetPixel(i + ii, j + jj).G;
+
+            return s;
+        }
+
+        int LapB(int i, int j)
+        {
+            int s = 0;
+            for (int ii = -1; ii <= 1; ii++)
+                for (int jj = -1; jj <= 1; jj++)
+                    if ((ii == 0) && (jj == 0))
+                        s += 9 * theBitmapLeft.GetPixel(i + ii, j + jj).B;
+                    else
+                        s += (-1) * theBitmapLeft.GetPixel(i + ii, j + jj).B;
+
+            return s;
         }
 
         /** Lab 4 */
@@ -614,19 +862,120 @@ namespace simpleOne
                        new int[,] {{ -3, -3, -3 }, { -3, 0, 5 }, { -3, 5, 5 } }
                     };
 
-    
+       private Bitmap ConvertToGray(Bitmap source)
+       {
+           Bitmap newBitmap = new Bitmap(source.Width, source.Height);
+           for (int x = 0; x < newBitmap.Width; x++)
+           {
+               for (int y = 0; y < newBitmap.Height; y++)
+               {
+                   Color c = source.GetPixel(x, y);
+                   int m = (int)(c.R * 0.3 + c.G * 0.59 + c.B * 0.11);
+                   newBitmap.SetPixel(x, y, Color.FromArgb(m, m, m));
+               }
+           }
+           return newBitmap;
+       }
+       private Bitmap binarize(Bitmap source)
+       {
+           Bitmap newBitmap = new Bitmap(source.Width, source.Height);
+           byte R, G, B;
+           Color pixelColor;
 
+           source = ConvertToGray(source);
+           int threshold = 0;
+
+           for (int x = 0; x < source.Width; x++)
+           {
+               for (int y = 0; y < source.Height; y++)
+               {
+                   threshold = threshold + source.GetPixel(x, y).R;
+               }
+           }
+           threshold = threshold / source.Width / source.Height;
+           for (int x = 0; x < source.Width; x++)
+           {
+
+               for (int y = 0; y < source.Height; y++)
+               {
+                   pixelColor = source.GetPixel(x, y);
+                   if (pixelColor.R < threshold)
+                       R = 0;
+                   else
+                       R = 255;
+                   if (pixelColor.G < threshold)
+                       G = 0;
+                   else
+                       G = 255;
+                   if (pixelColor.B < threshold)
+                       B = 0;
+                   else
+                       B = 255;
+                   newBitmap.SetPixel(x, y, Color.FromArgb((int)R, (int)G, (int)B));
+               }
+           }
+
+           return newBitmap;
+       }
+       private Bitmap getContour(Bitmap source)
+       {
+           Bitmap newBitmap = new Bitmap(source);
+           for (int x = 1; x < newBitmap.Width - 1; x++)
+           {
+               for (int y = 1; y < newBitmap.Height - 1; y++)
+               {
+
+                   int color = newBitmap.GetPixel(x, y).R;
+                   if (color == 255)
+                   {
+                       if (isContour(x, y, newBitmap) != true)
+                       {
+                           newBitmap.SetPixel(x, y, Color.FromArgb(125, 125, 125));
+                       }
+                       else
+                       {
+                           newBitmap.SetPixel(x, y, Color.FromArgb(255, 255, 255));
+                       }
+                   }
+                   else
+                   {
+                       newBitmap.SetPixel(x, y, Color.FromArgb(0, 0, 0));
+                   }
+               }
+           }
+
+           for (int x = 0; x < newBitmap.Width; x++)
+           {
+               for (int y = 0; y < newBitmap.Height; y++)
+               {
+                   if (newBitmap.GetPixel(x, y).R == 125)
+                       newBitmap.SetPixel(x, y, Color.FromArgb(0, 0, 0));
+               }
+           }
+
+           return newBitmap;
+       }
+
+      Boolean isContour(int i, int j, Bitmap source)
+      {
+            Boolean isContour = false;
+            for (int ii = -1; ii <= 1; ii++)
+                for (int jj = -1; jj <= 1; jj++)
+                    if ((source.GetPixel(i + ii, j + jj).R == 0))
+                    {
+                        if (!((ii == 0) && (jj == 0)))
+                            isContour = true;
+                    }
+            return isContour;
+      }
         private void btnCSScountour_Click(object sender, EventArgs e)
         {
             try
             {
-                theBitmapRight = new Bitmap(theBitmapLeft);
-                btnSave.Enabled = true;
+                theBitmapRight = binarize(theBitmapLeft);
+                Bitmap aux = getContour(theBitmapRight);
 
-                theBitmapRight = FilterProcessImage(theBitmapLeft);
-
-
-                picRight.Image = theBitmapRight;
+                picRight.Image = aux;
                 picRight.Refresh();
             }
             catch (Exception ex)
@@ -646,6 +995,8 @@ namespace simpleOne
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
+
+        //    theBitmapRight = new Bitmap(theBitmapLeft);
 
             // Creating the filter
             AForge.Imaging.Filters.FiltersSequence filterSequence =
@@ -677,9 +1028,10 @@ namespace simpleOne
                 HitAndMiss.Modes.Thinning));
             // create filter iterator for 10 iterations
             AForge.Imaging.Filters.FilterIterator filter =
-                new AForge.Imaging.Filters.FilterIterator(filterSequence, 10);
+                new AForge.Imaging.Filters.FilterIterator(filterSequence, 7);
             // apply the filter
             System.Drawing.Bitmap newImage = filter.Apply(image);
+            theBitmapRight = newImage;
             picRight.Image = newImage;
         }
 
@@ -823,131 +1175,131 @@ namespace simpleOne
                     { -1, -1, -1 }
                 };
             // create filter
-            HitAndMiss filter = new HitAndMiss(se, HitAndMiss.Modes.Thinning);
+           // HitAndMiss filter = new HitAndMiss(se, HitAndMiss.Modes.Thinning);
+
+            AForge.Imaging.Filters.FiltersSequence filterSequence =
+    new AForge.Imaging.Filters.FiltersSequence();
+            // add 8 thinning filters with different structuring elements
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, 0, 0 }, { -1, 1, -1 }, { 1, 1, 1 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 0, 0 }, { 1, 1, 0 }, { -1, 1, -1 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 1, -1, 0 }, { 1, 1, 0 }, { 1, -1, 0 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 1, -1 }, { 1, 1, 0 }, { -1, 0, 0 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 1, 1, 1 }, { -1, 1, -1 }, { 0, 0, 0 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 1, -1 }, { 0, 1, 1 }, { 0, 0, -1 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, -1, 1 }, { 0, 1, 1 }, { 0, -1, 1 } },
+                HitAndMiss.Modes.Thinning));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, 0, -1 }, { 0, 1, 1 }, { -1, 1, -1 } },
+                HitAndMiss.Modes.Thinning));
+            // create filter iterator for 10 iterations
+            AForge.Imaging.Filters.FilterIterator filter =
+                new AForge.Imaging.Filters.FilterIterator(filterSequence, 10);
+
             // apply the filter
-            filter.ApplyInPlace(image);
+            filter.Apply(image);
 
             picRight.Image = image;
             picRight.Refresh();
         }
 
-        private void myThin()
+        private Bitmap myThin(Bitmap source)
         {
-            theBitmapRight = new Bitmap(theBitmapLeft);
-            btnSave.Enabled = true;
+            Bitmap newBitmap = new Bitmap(source);
+            Boolean isDone = false;
 
-            int[] x_uri = new int[] { -1, -1, -1, 0, 1, 1, 1, 0 };
-            int[] y_uri = new int[] { 1, 0, -1, -1, -1, 0, 1, 1 };
-
-            int w = theBitmapLeft.Width;
-            int h = theBitmapLeft.Height;
-
-            for (int i = 1; i < w - 1; i++)
+            while (!isDone)
             {
-                for (int j = 1; j < h - 1; j++)
+                isDone = true;
+                for (int x = 1; x < newBitmap.Width - 1; x++)
                 {
-                    int s = 0;
-                    Color c = theBitmapRight.GetPixel(i, j);
-
-                    int gray = c.R;
-
-                    if (gray == 255)
+                    for (int y = 1; y < newBitmap.Height - 1; y++)
                     {
-                        for (int k = 0; k < 8; k++)
+
+                        int color = newBitmap.GetPixel(x, y).R;
+                        if (color == 255)
                         {
-                            if (i + x_uri[k] >= 0 
-                                && i + x_uri[k] < w
-                                && j + y_uri[k] >= 0
-                                && j + y_uri[k] < h)
+                            if (isRemovable(x, y, newBitmap))
                             {
-                                c = theBitmapLeft.GetPixel(i + x_uri[k], j + y_uri[k]);
-                                gray = (c.R);
-                                if (gray == 255)
-                                {
-                                    s++;
-                                }
+                                isDone = false;
+                                newBitmap.SetPixel(x, y, Color.FromArgb(0, 0, 0));
+                            }
+                            else
+                            {
+                                newBitmap.SetPixel(x, y, Color.FromArgb(255, 255, 255));
                             }
                         }
-                    }
-
-                    if (s == 1)
-                    {
-                        c = theBitmapLeft.GetPixel(i, j - 1);
-                        int westGray = c.R;
-                        c = theBitmapLeft.GetPixel(i, j + 1);
-                        int eastGray = c.R;
-                        c = theBitmapLeft.GetPixel(i - 1, j);
-                        int northGray = c.R;
-                        c = theBitmapLeft.GetPixel(i + 1, j);
-                        int southGray = c.R;
-
-                        if (westGray == 255 || eastGray == 255 || northGray == 255 || southGray == 255)
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-
-                    }
-
-                    if (s == 2)
-                    {
-                        c = theBitmapLeft.GetPixel(i, j - 1);
-                        int westGray = c.R;
-                        c = theBitmapLeft.GetPixel(i, j + 1);
-                        int eastGray = c.R;
-                        c = theBitmapLeft.GetPixel(i - 1, j);
-                        int northGray = c.R;
-                        c = theBitmapLeft.GetPixel(i + 1, j);
-                        int southGray = c.R;
-
-                        c = theBitmapLeft.GetPixel(i + 1, j - 1);
-                        int southWestGray = c.R;
-                        c = theBitmapLeft.GetPixel(i + 1, j + 1);
-                        int southEastGray = c.R;
-                        c = theBitmapLeft.GetPixel(i - 1, j - 1);
-                        int northWestGray = c.R;
-                        c = theBitmapLeft.GetPixel(i - 1, j + 1);
-                        int northEastGray = c.R;
-
-                        if (northEastGray == 255 && northWestGray == 255)
+                        else
                         {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-                            theBitmapRight.SetPixel(i - 1, j, Color.FromArgb(0, 0, 0));
-                        }
-
-                        if (northWestGray == 255 && southWestGray == 255)
-                        {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-                            theBitmapRight.SetPixel(i, j - 1, Color.FromArgb(0, 0, 0));
-                        }
-
-                        if (southWestGray == 255 && southEastGray == 255)
-                        {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-                            theBitmapRight.SetPixel(i + 1, j, Color.FromArgb(0, 0, 0));
-                        }
-
-                        if (southEastGray == 255 && northEastGray == 255)
-                        {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
-                            theBitmapRight.SetPixel(i, j + 1, Color.FromArgb(0, 0, 0));
-                        }
-
-                        if (eastGray == 255 && northGray == 255 || 
-                            eastGray == 255 && southGray == 255 || 
-                            northGray == 255 && westGray == 255 ||
-                            westGray == 255 && southGray == 255)
-                        {
-                            theBitmapRight.SetPixel(i, j, Color.FromArgb(255, 255, 255));
+                            newBitmap.SetPixel(x, y, Color.FromArgb(0, 0, 0));
                         }
                     }
                 }
             }
+            return newBitmap;
+        }
 
-            picRight.Image = theBitmapRight;
-            picRight.Refresh();
+        Boolean isRemovable(int i, int j, Bitmap source)
+        {
+            int[] vecA = new int[9];
+            Boolean ok = false;
+            int Bp1 = 0;
+            int Ap1 = 0;
+
+            vecA[0] = source.GetPixel(i - 1, j + 1).R;
+            vecA[1] = source.GetPixel(i - 1, j).R;
+            vecA[2] = source.GetPixel(i - 1, j - 1).R;
+            vecA[3] = source.GetPixel(i, j - 1).R;
+            vecA[4] = source.GetPixel(i + 1, j - 1).R;
+            vecA[5] = source.GetPixel(i + 1, j).R;
+            vecA[6] = source.GetPixel(i + 1, j + 1).R;
+            vecA[7] = source.GetPixel(i, j + 1).R;
+            vecA[8] = source.GetPixel(i - 1, j + 1).R;
+
+            for (int k = 0; k < 8; k++)
+            {
+                if ((vecA[k] == 255) && (vecA[k + 1] == 0))
+                    Ap1++;
+            }
+
+            for (int ii = -1; ii <= 1; ii++)
+            {
+                for (int jj = -1; jj <= 1; jj++)
+                {
+                    if ((source.GetPixel(i + ii, j + jj).R == 255))
+                        Bp1++;
+                }
+            }
+            Bp1 = Bp1 - 1;
+
+
+            if ((Bp1 >= 2) && (Bp1 < 6))
+            {
+                if (Ap1 == 1)
+                    ok = true;
+            }
+            return ok;
         }
         private void btnCSSthinning_Click(object sender, EventArgs e)
         {
-            // AFThin();
-            myThin();
+         //   AFThin();
+            theBitmapRight = binarize(theBitmapLeft);
+            Bitmap aux = myThin(theBitmapRight);
+
+            picRight.Image = aux;
+            picRight.Refresh();
         }
 
         private void groupBox1_Enter(object sender, EventArgs e)
@@ -1102,10 +1454,57 @@ namespace simpleOne
             picRight.Refresh();
         }
 
-        private void btnThick_Click(object sender, EventArgs e)
+        private void AFThick()
         {
             // load the image
-            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
+            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
+            // format image
+            // AForge.Imaging.Image.FormatImage(ref image);
+            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
+
+            //    theBitmapRight = new Bitmap(theBitmapLeft);
+
+            // Creating the filter
+            AForge.Imaging.Filters.FiltersSequence filterSequence =
+    new AForge.Imaging.Filters.FiltersSequence();
+            // add 8 thinning filters with different structuring elements
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, 0, 0 }, { -1, 1, -1 }, { 1, 1, 1 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 0, 0 }, { 1, 1, 0 }, { -1, 1, -1 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 1, -1, 0 }, { 1, 1, 0 }, { 1, -1, 0 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 1, -1 }, { 1, 1, 0 }, { -1, 0, 0 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 1, 1, 1 }, { -1, 1, -1 }, { 0, 0, 0 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { -1, 1, -1 }, { 0, 1, 1 }, { 0, 0, -1 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, -1, 1 }, { 0, 1, 1 }, { 0, -1, 1 } },
+                HitAndMiss.Modes.Thickening));
+            filterSequence.Add(new AForge.Imaging.Filters.HitAndMiss(
+                new short[,] { { 0, 0, -1 }, { 0, 1, 1 }, { -1, 1, -1 } },
+                HitAndMiss.Modes.Thickening));
+            // create filter iterator for 10 iterations
+            AForge.Imaging.Filters.FilterIterator filter =
+                new AForge.Imaging.Filters.FilterIterator(filterSequence, 100);
+            // apply the filter
+            System.Drawing.Bitmap newImage = filter.Apply(image);
+            picRight.Image = newImage;
+        }
+
+        private void btnThick_Click(object sender, EventArgs e)
+        {
+            
+            // load the image
+            System.Drawing.Bitmap img = (Bitmap)Bitmap.FromFile(file);
             // format image
             // AForge.Imaging.Image.FormatImage(ref image);
             Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
@@ -1121,7 +1520,9 @@ namespace simpleOne
             filter.ApplyInPlace(image);
 
             picRight.Image = image;
-            picRight.Refresh();
+            picRight.Refresh(); 
+
+           // AFThick();
         }
 
         // Color transformation
@@ -1413,8 +1814,10 @@ namespace simpleOne
                             }
                         }
                     }
-                    if (max > 255)
-                        max = 255;
+
+                    max = max % 255;
+                 //   if (max > 255)
+                 //       max = 255;
 
                     c = Color.FromArgb(max, max, max);
 
@@ -1452,8 +1855,10 @@ namespace simpleOne
                             }
                         }
                     }
-                    if (min < 0)
-                        min = 0;
+
+                    min = Math.Abs(min) % 255; 
+                   // if (min < 0)
+                   //     min = 0;
 
                     c = Color.FromArgb(min, min, min);
 
@@ -1479,7 +1884,7 @@ namespace simpleOne
                     Color d = dilBitmap.GetPixel(i, j);
                     Color e = eroBitmap.GetPixel(i, j);
 
-                    int v = d.R - e.R;
+                    int v = (d.R - e.R) % 255;
                     if (v > 255) v = 255;
                     if (v < 0) v = 0;
 
@@ -1496,6 +1901,8 @@ namespace simpleOne
             picRight.Image = theBitmapRight;
             picRight.Refresh();
         }
+
+
 
     }
 }
