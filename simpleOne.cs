@@ -1379,20 +1379,22 @@ namespace simpleOne
 
         private void btnErode_Click(object sender, EventArgs e)
         {
-            // load the image
-            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
-            // format image
-            // AForge.Imaging.Image.FormatImage(ref image);
-            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
-            // create filter
-            AForge.Imaging.Filters.Erosion filter = new AForge.Imaging.Filters.Erosion();
-            // apply filter
-            System.Drawing.Bitmap newImage = filter.Apply(image);
-            theBitmapRight = newImage;
-            picRight.Image = newImage;
+            if (this.rbBinary.Checked)
+            {
+                Bitmap image = theBitmapLeft.Clone(new Rectangle(0, 0, theBitmapLeft.Width, theBitmapLeft.Height), PixelFormat.Format8bppIndexed);
+                // create filter
+                BinaryErosion3x3 filter = new BinaryErosion3x3();
+                // apply filter
+                theBitmapRight = filter.Apply(image);
+            }
+            else
+            {
+                theBitmapRight = eroBitmap(theBitmapLeft);
+            }
+
+            picRight.Image = theBitmapRight;
             picRight.Refresh();
         }
-
 
         private void btnDilateBW_Click(object sender, EventArgs e)
         {
@@ -1407,17 +1409,23 @@ namespace simpleOne
              * 
              * */
 
-            // load the image
-            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
-            // format image
-            // AForge.Imaging.Image.FormatImage(ref image);
-            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
-            // create filter
-            AForge.Imaging.Filters.Dilatation filter = new AForge.Imaging.Filters.Dilatation();
-            // apply filter
-            System.Drawing.Bitmap newImage = filter.Apply(image);
-            theBitmapRight = newImage;
-            picRight.Image = newImage;
+            byte[,] se = new byte[3, 3];
+
+     
+            if (this.rbBinary.Checked)
+            {
+                Bitmap image = theBitmapLeft.Clone(new Rectangle(0, 0, theBitmapLeft.Width, theBitmapLeft.Height), PixelFormat.Format8bppIndexed);
+                // create filter
+                BinaryDilatation3x3 filter = new BinaryDilatation3x3();
+                // apply filter
+                theBitmapRight = filter.Apply(image);
+            }
+            else
+            {
+                theBitmapRight = dilBitmap(theBitmapLeft);
+            }
+
+            picRight.Image = theBitmapRight;
             picRight.Refresh();
         }
 
@@ -1425,32 +1433,49 @@ namespace simpleOne
         {
             // Erode + Dilate
             // load the image
-            System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
-            // format image
-            // AForge.Imaging.Image.FormatImage(ref image);
-            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
-            // create filter
-            Opening filter = new Opening();
-            // apply filter
-            System.Drawing.Bitmap newImage = filter.Apply(image);
-            picRight.Image = newImage;
+            if (this.rbBinary.Checked)
+            {
+                System.Drawing.Bitmap img = theBitmapLeft; // (Bitmap)Bitmap.FromFile(file);
+                // format image
+                // AForge.Imaging.Image.FormatImage(ref image);
+                Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
+                // create filter
+                Opening filter = new Opening();
+                // apply filter
+                theBitmapRight =  filter.Apply(image);
+            }
+            else
+            {
+                Bitmap aux;
+                aux = eroBitmap(theBitmapLeft);
+                theBitmapRight = dilBitmap(aux);
+            }
+            picRight.Image = theBitmapRight;
             picRight.Refresh();
-
         }
 
         private void btnClosing_Click(object sender, EventArgs e)
         {
             // Dilate + Erode
             // load the image
-            System.Drawing.Bitmap img = theBitmapLeft;  // (Bitmap)Bitmap.FromFile(file);
-            // format image
-            // AForge.Imaging.Image.FormatImage(ref image);
-            Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
-            // create filter
-            Closing filter = new Closing();
-            // apply filter
-            System.Drawing.Bitmap newImage = filter.Apply(image);
-            picRight.Image = newImage;
+            if (this.rbBinary.Checked)
+            {
+                System.Drawing.Bitmap img = theBitmapLeft;  // (Bitmap)Bitmap.FromFile(file);
+                // format image
+                // AForge.Imaging.Image.FormatImage(ref image);
+                Bitmap image = img.Clone(new Rectangle(0, 0, img.Width, img.Height), PixelFormat.Format8bppIndexed);
+                // create filter
+                Closing filter = new Closing();
+                // apply filter
+                theBitmapRight = filter.Apply(image);
+            }
+            else
+            {
+                Bitmap aux;
+                aux = dilBitmap(theBitmapLeft);
+                theBitmapRight = eroBitmap(aux);
+            }
+            picRight.Image = theBitmapRight;
             picRight.Refresh();
         }
 
@@ -1869,6 +1894,94 @@ namespace simpleOne
             return bit;
         }
 
+        public Bitmap DilateC(Bitmap Image)
+        {
+            int Size = 5;
+            System.Drawing.Bitmap TempBitmap = Image;
+            System.Drawing.Bitmap NewBitmap = new System.Drawing.Bitmap(TempBitmap.Width, TempBitmap.Height);
+            System.Drawing.Graphics NewGraphics = System.Drawing.Graphics.FromImage(NewBitmap);
+            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), System.Drawing.GraphicsUnit.Pixel);
+            NewGraphics.Dispose();
+            Random TempRandom = new Random();
+            int ApetureMin = -(Size / 2);
+            int ApetureMax = (Size / 2);
+            for (int x = 0; x < NewBitmap.Width; ++x)
+            {
+                for (int y = 0; y < NewBitmap.Height; ++y)
+                {
+                    int RValue = 0;
+                    int GValue = 0;
+                    int BValue = 0;
+                    for (int x2 = ApetureMin; x2 < ApetureMax; ++x2)
+                    {
+                        int TempX = x + x2;
+                        if (TempX >= 0 && TempX < NewBitmap.Width)
+                        {
+                            for (int y2 = ApetureMin; y2 < ApetureMax; ++y2)
+                            {
+                                int TempY = y + y2;
+                                if (TempY >= 0 && TempY < NewBitmap.Height)
+                                {
+                                    Color TempColor = TempBitmap.GetPixel(TempX, TempY);
+                                    if (TempColor.R > RValue)
+                                        RValue = TempColor.R;
+                                    if (TempColor.G > GValue)
+                                        GValue = TempColor.G;
+                                    if (TempColor.B > BValue)
+                                        BValue = TempColor.B;
+                                }
+                            }
+                        }
+                    }
+                    Color TempPixel = Color.FromArgb(RValue, GValue, BValue);
+                    NewBitmap.SetPixel(x, y, TempPixel);
+                }
+            }
+            return NewBitmap;
+        }
+
+        public Bitmap ErodeC(Bitmap Image)
+        {
+            int Size = 5;
+            System.Drawing.Bitmap TempBitmap = Image;
+            System.Drawing.Bitmap NewBitmap = new System.Drawing.Bitmap(TempBitmap.Width, TempBitmap.Height);
+            System.Drawing.Graphics NewGraphics = System.Drawing.Graphics.FromImage(NewBitmap);
+            NewGraphics.DrawImage(TempBitmap, new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), new System.Drawing.Rectangle(0, 0, TempBitmap.Width, TempBitmap.Height), System.Drawing.GraphicsUnit.Pixel);
+            NewGraphics.Dispose();
+            int r, g, b;
+            for (int x = 0; x < NewBitmap.Width; ++x)
+            {
+                for (int y = 0; y < NewBitmap.Height; ++y)
+                {
+                    Color c = TempBitmap.GetPixel(x, y);
+                    r = c.R;
+                    g = c.G;
+                    b = c.B;
+
+                    //Erosion
+                    for (int aa = -1; aa < 2; aa++)
+                    {
+                        for (int bb = -1; bb < 2; bb++)
+                        {
+                            try
+                            {
+                                Color col2 = TempBitmap.GetPixel(x + aa, y + bb);
+                                r = Math.Min(r, col2.R);
+                                g = Math.Min(g, col2.G);
+                                b = Math.Min(b, col2.B);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                    }
+
+                    NewBitmap.SetPixel(x, y, Color.FromArgb(255, r, g, b));
+                }
+            }
+            return NewBitmap;
+        }
+
         private Bitmap morphGradient(Bitmap dilBitmap, Bitmap eroBitmap)
         {
             Bitmap bit = new Bitmap(theBitmapLeft);
@@ -1883,12 +1996,13 @@ namespace simpleOne
                 {
                     Color d = dilBitmap.GetPixel(i, j);
                     Color e = eroBitmap.GetPixel(i, j);
+                    Color o = bit.GetPixel(i, j);
 
-                    int v = (d.R - e.R) % 255;
-                    if (v > 255) v = 255;
-                    if (v < 0) v = 0;
+                    int r = Math.Abs((d.R - e.R)) % 255;
+                    int g = Math.Abs(d.G - e.G) % 255;
+                    int b = Math.Abs(d.B - e.B) % 255;
 
-                    bit.SetPixel(i, j, Color.FromArgb(v, v, v));
+                    bit.SetPixel(i, j, Color.FromArgb(r, g, b));
                 }
             }
 
@@ -1897,7 +2011,21 @@ namespace simpleOne
 
         private void btnColorGradient_Click(object sender, EventArgs e)
         {
-            theBitmapRight = morphGradient(dilBitmap(theBitmapLeft), eroBitmap(theBitmapLeft));
+            theBitmapRight = morphGradient(DilateC(theBitmapLeft), ErodeC(theBitmapLeft));
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+
+        private void btnDilateColor_Click(object sender, EventArgs e)
+        {
+            theBitmapRight = DilateC(theBitmapLeft); 
+            picRight.Image = theBitmapRight;
+            picRight.Refresh();
+        }
+
+        private void btnErodeColor_Click(object sender, EventArgs e)
+        {
+            theBitmapRight = ErodeC(theBitmapLeft);
             picRight.Image = theBitmapRight;
             picRight.Refresh();
         }
